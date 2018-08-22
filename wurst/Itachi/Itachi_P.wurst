@@ -1,12 +1,19 @@
-// package Itachi_P
+package Itachi_P
 
-// import ClosureForGroups
-// import ClosureTimers
-// import RegisterEvents
-// import Fast
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
 
-// function spellCast(unit caster)
-//     print("Я работаю")
+let itachId = 'H003'
+let id = 'A019'
+let sharinganPath = "sharingan3.mdx"
 
-// init 
-//     event
+function spellCast(unit caster)
+    
+
+init 
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DETECTED) ->
+        let detectedUnit = GetDetectedUnit()
+        if detectedUnit.getTypeId() == itachId
+            print("Я пчелка 2")

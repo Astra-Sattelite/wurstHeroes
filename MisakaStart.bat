@@ -1,0 +1,2 @@
+copy "C:\Users\Exty\Desktop\git\wurstHeroes\_build\Misaka.w3x" "C:\Games\[NarutoPlanet.ru] Warcraft 3 Anime Edition\Maps"
+"C:\Games\[NarutoPlanet.ru] Warcraft 3 Anime Edition\Frozen Throne.exe" -loadfile "C:\Games\[NarutoPlanet.ru] Warcraft 3 Anime Edition\Maps\Misaka.w3x"
