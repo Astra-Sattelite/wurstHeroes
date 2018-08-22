@@ -1,0 +1,12 @@
+// package Joker_W
+
+// import ClosureForGroups
+// import ClosureTimers
+// import RegisterEvents
+// import Fast
+
+// function spellCast(unit caster, vec2 castPos)
+
+// init 
+//     registerSpellEffectEvent(id) ->
+//         spellCast(GetTriggerUnit(), getSpellTargetPos())

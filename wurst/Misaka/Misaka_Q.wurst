@@ -1,0 +1,111 @@
+package Misaka_Q
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+
+function thunderExplosion (
+    unit caster,
+    unit thunderArrow, 
+    real damageExplosion,
+    real radiusExplosion,
+    int explosionId,
+    real damagePeriodic,
+    real distance,
+    real speed,
+    real radius,
+    sound soundQhit
+)   
+    let casterOwner = caster.getOwner()
+
+    doPeriodicallyTimed(0.025, distance / speed * 0.025) cb ->
+        moveForward(thunderArrow, speed)
+        let thunderArrowPos = thunderArrow.getPos()
+        forUnitsInRange(thunderArrowPos, radius) victim ->
+            if not IsUnitAlly(victim, casterOwner) and victim.isAlive() 
+                caster.damageTarget(victim, damagePeriodic)
+                cb.stop()
+
+        if cb.isLast()
+            forUnitsInRange(thunderArrow.getPos(), radiusExplosion) victim ->
+                if not IsUnitAlly(victim, casterOwner) and victim.isAlive() 
+                    caster.damageTarget(victim, damageExplosion)
+                    StartSound(soundQhit)
+                    flashEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", thunderArrow.getPos())
+                    thunderArrow.kill()
+                    let explosion = CreateUnit(
+                        casterOwner, 
+                        explosionId, 
+                        thunderArrow.getX(),
+                        thunderArrow.getY(),
+                        0
+                    )
+                    doAfter(1) ->
+                        explosion.kill()
+            let explosion1 = CreateUnit(
+                casterOwner, 
+                explosionId, 
+                thunderArrow.getX(),
+                thunderArrow.getY(),
+                0
+            )
+            doAfter(1) ->
+                    explosion1.kill()
+            forUnitsInRange(explosion1.getPos(), radiusExplosion) victim ->
+                if not IsUnitAlly(victim, casterOwner) and victim.isAlive() 
+                    caster.damageTarget(victim, damageExplosion)
+                    StartSound(soundQhit)
+            flashEffect("Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl", explosion1.getPos())
+            thunderArrow.kill()
+            SetPlayerAbilityAvailable(casterOwner, 'A002', false)
+            caster.addAbility('A003')
+            doAfter(6) ->
+                if caster.hasAbility('A003')
+                    caster.removeAbility('A003')
+                    SetPlayerAbilityAvailable(casterOwner, 'A002', true)
+
+            
+
+function spellCast(unit caster, vec2 castPos)
+
+    let soundFly = gg_snd_misakaRbursShortt
+    let soundQhit = gg_snd_meleeQHit
+    let soundQFirst = gg_snd_meleeQ
+    let damageExplosion = 100.
+    let radiusExplosion = 200.
+    let explosionId = 'c005'
+    let damagePeriodic = 50.
+    let radius = 200.
+    let speed = 80.
+    let distance = 1500.
+    let thunderArrowSpawnPos = getPosForward(caster, 10)
+    let thunderArrowEffect = 'c004'
+    let thunderArrow = CreateUnit(
+        caster.getOwner(),
+        thunderArrowEffect, 
+        thunderArrowSpawnPos.x,
+        thunderArrowSpawnPos.y,
+        angleBetween(caster, castPos)
+    )
+    StartSound(soundFly)
+    StartSound(soundQFirst)
+    thunderExplosion(
+        caster, 
+        thunderArrow, 
+        damageExplosion, 
+        radiusExplosion, 
+        explosionId, 
+        damagePeriodic, 
+        distance, 
+        speed, 
+        radius,
+        soundQhit
+    )
+    
+
+init 
+    let id = 'A002'
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit(), vec2(GetSpellTargetX(), GetSpellTargetY()))

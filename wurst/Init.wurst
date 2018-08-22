@@ -1,0 +1,23 @@
+package Init
+import ClosureTimers
+import RegisterEvents
+
+function animPlayer(unit u, int animIndex)
+    PauseUnit(u, true)
+    u.setAnimation(animIndex)
+    print(animIndex)
+
+    doAfter(1.5) ->
+        animPlayer(u, animIndex + 1)
+init 
+    FogEnable(false)
+    SetTimeOfDay(6)
+    let itachi = createUnit(Player(0), 'H003', vec2(0, 0), angle(0))
+    // let misaka = createUnit(Player(0), 'H000', vec2(0, 0), angle(0))
+    // misaka.setLevel(20, false)
+    itachi.setLevel(20, false)
+    // animPlayer(joker, 0)
+    
+    registerPlayerUnitEvent(EVENT_PLAYER_UNIT_DEATH) ->
+        let dyingUnit = GetTriggerUnit()
+        doAfter(3, () -> dyingUnit.remove())

@@ -1,0 +1,98 @@
+package Misaka_W
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+class Misaka_W
+    static let spell = new Spell()
+class Spell
+    let clapEffect = "Abilities\\Spells\\Human\\Thunderclap\\ThunderClapCaster.mdl"
+    let circleGun = CreateGroup()
+    let id = 'A000'
+    let damagePeriod = 5.
+    let finalKnockbackSpeed = 70.
+    let finalKnockback = 700.
+    let finalDamage = 250.
+    let knockbackSpeed = 30.
+    let damage = 120.
+    let distance = 2000.
+    let speed = 120.
+    let radius = 100.
+    let railFect = 'c001'
+    let railgunId = 'c000'
+    let railgunKnockback = 300.
+
+    function railgunChecking(unit caster, unit railgun, real finishedDistance, group damagedUnits)
+        
+        let casterOwner = caster.getOwner()
+        let movedUnits = CreateGroup()
+
+        doAfter(0.025) ->
+            moveForward(railgun, speed)
+            let railgunPos = railgun.getPos()
+            forUnitsInRange(railgunPos, radius) victim ->
+                let victimPos = victim.getPos()
+                if IsUnitEnemy(victim, casterOwner) and victim.isAlive() and not damagedUnits.contains(victim)
+                    if finishedDistance <= 200
+                        damagedUnits.addUnit(victim)
+                        caster.damageTarget(victim, finalDamage)
+                        flashEffect(clapEffect, victimPos)
+                if IsUnitEnemy(victim, casterOwner) and victim.isAlive() and not damagedUnits.contains(victim)
+                    if finishedDistance >= 1700 
+                        damagedUnits.addUnit(victim)
+                        movedUnits.addUnit(victim)
+                        doPeriodicallyTimed(0.025, 0.3) cb ->
+                            victim.setPos(railgun.getPos())
+                            caster.damageTarget(victim, damagePeriod)
+                            flashEffect(clapEffect, victimPos)
+                            if cb.isLast() 
+                                movedUnits.clear()
+                    else
+                        damagedUnits.addUnit(victim)
+                        caster.damageTarget(victim, damage)
+                        let angleRail = angleBetween(railgun, victim) 
+                        doPeriodicallyTimed(0.025, railgunKnockback / knockbackSpeed * 0.025) cb ->
+                            if not movedUnits.contains(victim)
+                                moveToward(victim, knockbackSpeed, angleRail)
+                                flashEffect(clapEffect, victimPos)
+            if finishedDistance < distance 
+                movedUnits.clear()
+                movedUnits.destr()
+                railgunChecking(caster, railgun, Misaka_W.spell.circleGun.contains(railgun) ? finishedDistance : finishedDistance + speed, damagedUnits)
+            else          
+                for victim in movedUnits
+                    caster.damageTarget(victim, finalDamage)
+                    doPeriodicallyTimed(0.025, railgunKnockback / knockbackSpeed * 0.025) cb ->
+                        moveToward(victim, knockbackSpeed, angleBetween(railgun, victim))
+                if circleGun.contains(railgun)
+                    circleGun.removeUnit(railgun)
+                railgun.kill()
+                damagedUnits.clear()
+                damagedUnits.destr()
+                movedUnits.clear()
+                movedUnits.destr()
+                
+    function spellCast (unit caster, vec2 castPos)
+
+        let damagedUnits = CreateGroup()
+        let railgunSpawnPos = getPosForward(caster, 30)
+        
+        
+        gg_snd_monetka.play()
+        doPeriodicallyTimed(0.01, 0.3) cb ->
+            caster.setAnimation(7)
+            caster.issueImmediateOrder("stop")
+            if cb.isLast()
+                let railgun = createUnit(
+                    caster.getOwner(),
+                    railgunId,
+                    railgunSpawnPos,
+                    angleBetween(caster, castPos)
+                )
+                gg_snd_railgunSound.play()
+                railgunChecking(caster, railgun, 0, damagedUnits)
+init 
+    registerSpellEffectEvent(Misaka_W.spell.id) ->
+        Misaka_W.spell.spellCast(GetTriggerUnit(), getSpellTargetPos())

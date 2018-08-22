@@ -1,0 +1,76 @@
+package Misaka_SecondQ
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+function spellMech (
+    unit caster,
+    real distance,
+    real damage,
+    real speed,
+    real radius,
+    vec2 castPos,
+    int jumpEffectId,
+    int jumpEffectId2
+)
+    let casterOwner = caster.getOwner()
+    caster.removeAbility('A003')
+    caster.addAbility('A004')
+    doAfter(6) ->
+        if caster.hasAbility('A004')
+            caster.removeAbility('A004')
+            SetPlayerAbilityAvailable(casterOwner, 'A002', true)
+    
+    doPeriodicallyTimed(0.025, distance / speed * 0.025) cb ->
+        let casterPos = caster.getPos()
+        let jumpEffect = createUnit(
+            casterOwner,
+            jumpEffectId, 
+            casterPos, 
+            0
+        )
+        let jumpEffect2 = createUnit(
+            casterOwner,
+            jumpEffectId2, 
+            casterPos, 
+            0
+        )
+        caster.setAnimation(19)
+        moveToward(caster, speed, angleBetween(caster, castPos))
+        forUnitsInRange(caster.getPos(), radius) victim ->
+            if not IsUnitAlly(victim, casterOwner) and victim.isAlive()
+                caster.damageTarget(victim, damage)
+
+        doAfter(0.1) ->
+            jumpEffect.kill()
+        doAfter(1) ->
+            jumpEffect2.remove()
+    
+                
+            
+function spellCast(unit caster, vec2 castPos)
+    
+    let jumpEffectId2 = 'c007'
+    let jumpEffectId = 'c006'
+    let radius = 200.
+    let speed = 60.
+    let distance = 600.
+    let damage = 50.
+    
+    spellMech(
+        caster, 
+        distance, 
+        damage,
+        speed,
+        radius,
+        castPos,
+        jumpEffectId,
+        jumpEffectId2
+    )
+
+init 
+    let id = 'A003'
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit(), getSpellTargetPos())

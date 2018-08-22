@@ -1,0 +1,22 @@
+// package Joker_P
+
+// import ClosureTimers
+// import DamageDetection
+
+// let interval = 0.1
+// let duration = 3.
+// let id = 'A007'
+// let effectPath = "Chirodri.mdx"
+// let debuffId = 'B000'
+
+// init 
+//     addOnDamageFunc() ->
+//         let damager = GetEventDamageSource()
+//         let victim = GetTriggerUnit()
+        
+//         if damager.hasAbility(id) and victim.hasAbility(debuffId)
+//             let dmg = damager.getInt(true) * 0.1
+//             let victimSfx = victim.addEffect(effectPath, "origin")
+//             doPeriodicallyTimed(interval, duration) cb ->
+//                 damager.damageTarget(victim, dmg)
+//                 victimSfx.destr()

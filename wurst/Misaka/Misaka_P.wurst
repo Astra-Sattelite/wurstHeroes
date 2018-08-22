@@ -1,0 +1,13 @@
+// package Misaka_P
+
+// import ClosureForGroups
+// import ClosureTimers
+// import RegisterEvents
+// import Fast
+
+// function spellCast (unit caster)
+
+// init 
+//     let id = 'A00'
+//     registerSpellEffectEvent(id) ->
+//         spellCast(GetTriggerUnit())

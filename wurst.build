@@ -1,0 +1,10 @@
+---
+projectName: "Heroes"
+dependencies:
+- "https://github.com/wurstscript/wurstStdlib2"
+- "https://github.com/DoctorRyner/wurst-fast-lib"
+buildMapData:
+  name: "DefaultName"
+  fileName: "Misaka"
+  author: "DefaultAuthor"
+  playerCount: 1

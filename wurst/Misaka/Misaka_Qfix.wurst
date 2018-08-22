@@ -1,0 +1,14 @@
+package Misaka_Qfix
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+function spellCast (unit caster, vec2 castPos)
+    
+
+init 
+    let id = 'A002'
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit(), getSpellTargetPos())

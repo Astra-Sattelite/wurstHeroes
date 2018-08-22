@@ -1,0 +1,50 @@
+package Joker_Q
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+let id = 'A008'
+let pieId = 'c008'
+let secondQid = 'A009'
+let explosionModel = "FlameBomb.mdx"
+let smile = gg_snd_jokerSmile
+let expSound = gg_snd_explosion
+let shot = gg_snd_jokerQshot
+let distance = 1400.
+let speed = 40.
+let radius = 350.
+let knockback = 300.
+let knockbackSpeed = 40.
+
+function spellCast(unit caster, vec2 castPos)
+
+    smile.play()
+
+    let casterOwner = caster.getOwner()
+    let dmg = caster.getInt(true) * 2. + 100. * caster.getAbilityLevel(id)
+    let spawnAngle = angleBetween(caster, castPos)
+    let pie = createUnit(casterOwner, pieId, getPosToward(caster, 50, spawnAngle), spawnAngle)
+    caster.addAbility(secondQid)
+    SetPlayerAbilityAvailable(casterOwner, id, false)
+    doPeriodicallyTimed(0.025, distance / speed * 0.025) cb ->
+        moveForward(pie, speed)
+        if caster.hasAbility('B002')
+            cb.stop()
+        let piePos = pie.getPos()
+        if cb.isLast()
+            flashEffect(explosionModel, piePos)
+            shot.play()
+            expSound.play()
+            forUnitsInRange(piePos, radius) victim ->
+                if IsUnitEnemy(victim, casterOwner) and victim.isAlive()
+                    caster.damageTarget(victim, dmg)
+                    doPeriodicallyTimed(0.025, knockback / knockbackSpeed * 0.025) cb ->
+                        moveToward(victim, knockbackSpeed, angleBetween(piePos, victim))
+            pie.kill() 
+            caster.removeAbility(secondQid)
+            SetPlayerAbilityAvailable(casterOwner, id, true)        
+init 
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit(), getSpellTargetPos())

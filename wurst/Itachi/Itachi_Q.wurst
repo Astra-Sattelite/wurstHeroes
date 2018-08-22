@@ -1,0 +1,66 @@
+package Itachi_Q
+
+import Itachi_W
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+class Itachi_Q
+    static let spell = new Spell()
+class Spell
+    let soundKat = gg_snd_katonGouko
+    let dmgP = 0.25
+    let radiusP = 5.
+    let id = 'A010'
+    let katonId = 'c010'
+    let effectId = 'c011'
+    let speed = 40.
+    let dummyId = 'xdum'
+    let katonPlusScale = 0.15
+    let distance = 1400.
+    let dmgFinal = 100.
+
+function spellCast(unit caster, vec2 castPos, real casterScale)
+
+    let realCaster = CreateGroup()
+    realCaster.addUnit(unitFromIndex('H003'))
+    let dmgFinal = Itachi_Q.spell.dmgFinal + casterScale
+    let dmgFinalClone = 1. + unitFromIndex('H003').getInt(true)
+    real dmg = 1.
+    real radius = 200.
+    let casterOwner = caster.getOwner()
+    let katonAngle = angleBetween(caster, castPos)
+    let katonSpawnPos = getPosForward(caster, 30)
+    let katon = createUnit(casterOwner, Itachi_Q.spell.katonId, katonSpawnPos, katonAngle)
+    real katonScale = 2.
+
+    Itachi_Q.spell.soundKat.play()
+
+    doPeriodicallyTimed(0.025, Itachi_Q.spell.distance / Itachi_Q.spell.speed * 0.025) cb ->
+        moveForward(katon, Itachi_Q.spell.speed)
+        let katonPos = katon.getPos()
+        radius = radius + Itachi_Q.spell.radiusP
+        dmg = dmg + Itachi_Q.spell.dmgP
+        let fire = createUnit(casterOwner, Itachi_Q.spell.effectId, katonPos, 0)
+        katonScale = katonScale + Itachi_Q.spell.katonPlusScale
+        katon.setScale(katonScale)
+        doAfter(0.5) ->
+            fire.remove()
+        forUnitsInRange(katonPos, radius) victim ->
+            if IsUnitEnemy(victim, casterOwner) and victim.isAlive()
+                caster.damageTarget(victim, dmg)
+        if cb.isLast()
+            let expModel = createUnit(casterOwner, Itachi_Q.spell.dummyId, katonPos, 0)
+            expModel.setScale(4)
+            expModel.addEffect("AerialExplosionV3.mdx", "chest")
+            forUnitsInRange(katonPos, radius) victim ->
+                if IsUnitEnemy(victim, casterOwner) and victim.isAlive()
+                    // if realCaster.contains(unitFromIndex('H003'))
+                    caster.damageTarget(victim, dmgFinal)
+                    // else if Itachi_W.spell.cloneGroup.contains(unitFromIndex('h005'))
+                    //     caster.damageTarget(victim, dmgFinalClone)
+            katon.remove()
+init 
+    registerSpellEffectEvent(Itachi_Q.spell.id) ->
+        spellCast(GetTriggerUnit(), getSpellTargetPos(), GetTriggerUnit().getInt(true) + 1.)

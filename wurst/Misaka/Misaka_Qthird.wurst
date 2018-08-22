@@ -1,0 +1,63 @@
+package Misaka_Qthird
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+function spellMech(
+    real radius,
+    real damage,
+    real stunDuration,
+    int thunderId,
+    int explosionId,
+    vec2 castPos,
+    unit caster
+)
+    let casterOwner = caster.getOwner()
+    let explosion = createUnit(
+        casterOwner, 
+        explosionId, 
+        castPos,
+        0
+    )
+    explosion.setScale(1.5)
+    caster.removeAbility('A004')
+    SetPlayerAbilityAvailable(casterOwner, 'A002', true)
+
+    forUnitsInRange(castPos, radius) victim ->
+        if not IsUnitAlly(victim, casterOwner) and victim.isAlive()
+            let thunder = createUnit(
+                casterOwner, 
+                thunderId, 
+                victim.getPos(),
+                0
+            )
+            caster.damageTarget(victim, damage)
+            stun(victim, stunDuration)
+            doAfter(1) ->
+                thunder.kill()
+        doAfter(1) ->
+            explosion.kill()
+function spellCast(unit caster, vec2 castPos)
+
+    let radius = 200.
+    let damage = 50.
+    let stunDuration = 2.
+    let thunderId = 'c005'
+    let explosionId = 'c007'
+
+    spellMech(
+        radius, 
+        damage, 
+        stunDuration, 
+        thunderId, 
+        explosionId, 
+        castPos,
+        caster
+    )
+
+init 
+    let id = 'A004'
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit(), getSpellTargetPos())

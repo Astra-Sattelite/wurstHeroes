@@ -1,0 +1,81 @@
+package Itachi_W
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+class Itachi_W
+    static let spell = new Spell()
+class Spell
+    let cloneGroup = CreateGroup()
+
+let debuff = 'A018'
+let katonId = 'A010'
+let genjutsuId = 'h005'
+let sharinganId = 'c015'
+let id = 'A013'
+let darkId = 'c008'
+let roomId = 'c013'
+let radius = 700.
+let manaCost = 1.
+
+
+function spellCast(unit caster, vec2 castPos)
+
+    let randomGroup = CreateGroup()
+    let time = caster.getInt(true) / 4.
+    let casterOwner = caster.getOwner()
+    let itachiCastKaton = CreateGroup()
+    let room = createUnit(casterOwner, roomId, castPos, 0)
+    let roomPos = room.getPos()
+    let dark = createUnit(casterOwner, darkId, castPos, 0)
+    let sharingan = createUnit(casterOwner, sharinganId, castPos, 0)
+    dark.setScale(2.)
+    sharingan.setScale(10.)
+    room.setTimeScale(0.5)
+    dark.setTimeScale(0)
+    doPeriodicallyTimed(1, time) cb -> 
+        forUnitsInRange(roomPos, radius) victim ->
+            if IsUnitEnemy(victim, casterOwner) and victim.isAlive()
+                victim.addAbility(debuff)
+                SetPlayerAbilityAvailable(victim.getOwner(), debuff, false)
+                if distanceBetween(victim, room) >= radius + time
+                    victim.removeAbility(debuff)
+                let genjutsu = createUnit(casterOwner, genjutsuId,  getPosToward(victim, -50, angleBetween(caster, victim)), 0)
+                Itachi_W.spell.cloneGroup.addUnit(genjutsu)
+                itachiCastKaton.addUnit(genjutsu)
+                doPeriodicallyTimed(0.5, time) cb ->
+                    randomGroup.addUnit(itachiCastKaton.getRandomUnit())
+                doPeriodicallyTimed(0.025, time) cb ->
+                    let genjRange = distanceBetween(genjutsu, room)
+                    if genjRange >= radius + time
+                        doAfter(1) ->
+                            genjutsu.kill()
+                        if cb.isLast()
+                            genjutsu.kill()
+                genjutsu.issueImmediateOrder("attack")
+                if randomGroup != null
+                    doPeriodicallyCounted(1, 1) cb ->
+                        genjutsu.addAbility('A010')
+                        genjutsu.issueTargetOrder("bearform", victim)
+                        if cb.isLast()
+                            doAfter(0.5) ->
+                                
+                                genjutsu.removeAbility('A010')
+                                itachiCastKaton.addUnit(genjutsu)
+                                randomGroup.clear()
+        if cb.isLast()
+                Itachi_W.spell.cloneGroup.clear()
+                Itachi_W.spell.cloneGroup.destr()
+                itachiCastKaton.clear()
+                itachiCastKaton.destr()
+                randomGroup.clear()
+                randomGroup.destr()
+                room.kill()  
+                dark.kill()
+                sharingan.kill()       
+
+init 
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit(), getSpellTargetPos())

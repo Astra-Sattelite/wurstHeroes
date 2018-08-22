@@ -1,0 +1,161 @@
+package Misaka_E
+
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+function spawnThunder(
+    unit caster, 
+    int thunderEffA, 
+    int thunderEffB, 
+    int times,
+    real offset,
+    real currentOffset,
+    real angleEff,
+    real spawnPeriod,
+    real damageBegin,
+    real radius
+)
+    doAfter(spawnPeriod) ->
+        let thunderPosA = getPosToward(caster, currentOffset, angleEff)
+        let thunderA = createUnit(caster.getOwner(), thunderEffA, thunderPosA, 0)
+        forUnitsInRange(thunderPosA, radius) victim ->
+            if not IsUnitAlly(victim, caster.getOwner())
+                caster.damageTarget(victim, damageBegin)
+        doAfter(0.6) ->
+            thunderA.remove()
+        if times > 0
+            spawnThunder(
+                caster, 
+                thunderEffA, 
+                thunderEffB, 
+                times - 1, 
+                offset, 
+                currentOffset + offset,
+                angleEff, 
+                spawnPeriod,
+                damageBegin,
+                radius
+            )
+
+function spellCast(unit caster)
+    let times = 4
+    let offset = 200.
+    let currentOffset = 100.
+    let spawnPeriod = 0.2
+    let damageBegin = 100.
+    let radius = 200.
+    let thunderEffA= 'c002'
+    let thunderEffB= 'c003'
+    let soundCast = gg_snd_misakaCastR
+    let soundBurst = gg_snd_burstR2
+
+    StartSound(soundCast)
+    doAfter(0.4) ->
+        StartSound(soundBurst)
+
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees(), 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() - 180, 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() - 90, 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() + 90, 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() + 45, 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() - 45, 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() + (180 - 45), 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+    spawnThunder(
+        caster, 
+        thunderEffA, 
+        thunderEffB, 
+        times, 
+        offset, 
+        currentOffset, 
+        caster.getFacingAngle().degrees() + (180 + 45), 
+        spawnPeriod,
+        damageBegin,
+        radius
+    )
+
+    doPeriodicallyTimed(0.01, times * spawnPeriod) cb ->
+        caster.issueImmediateOrder("stop")
+        
+init 
+    let id = 'A001'
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit())

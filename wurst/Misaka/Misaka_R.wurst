@@ -1,0 +1,109 @@
+package Misaka_R
+
+import Misaka_W
+import ClosureForGroups
+import ClosureTimers
+import RegisterEvents
+import Fast
+
+let shadowId = 'c008'
+let thunderId = "ChidoriFix2.mdx"
+let barierId = "MagicShieldBlueBig.mdx"
+let thunderStunId = 'c002'
+
+function spellMech(
+    unit caster,
+    real damagePeriodic,
+    real damage,
+    real radius,
+    real times,
+    real microStun,
+    real knockback
+)
+    let dmgRand = CreateGroup()
+    let casterOwner = caster.getOwner()
+    let casterPos = caster.getPos()
+    let shadowAoe = createUnit(
+        casterOwner, 
+        shadowId, 
+        casterPos, 
+        0
+    )
+    
+    doAfter(0.5) ->
+        shadowAoe.setTimeScale(0)
+        let shadowBarier = shadowAoe.addEffect(barierId, "chest")
+        let thunderAoe = caster.addEffect(thunderId, "chest")
+        doAfter(9.475) ->
+            shadowBarier.destr()
+            thunderAoe.destr()
+    doPeriodicallyTimed(0.01, 0.05) cb ->
+        caster.setAnimation(16)
+        if cb.isLast()
+            doPeriodicallyTimed(0.5, 9.95) cb ->
+                let unluckyUnit = dmgRand.getRandomUnit()
+                if unluckyUnit != null
+                    let thunderStun = createUnit(casterOwner, thunderStunId, unluckyUnit.getPos(), 0)
+                    doAfter(0.5) ->
+                        thunderStun.remove()
+                    caster.damageTarget(unluckyUnit, damage)
+                    stun(unluckyUnit, microStun)
+            doPeriodicallyTimed(0.025, 9.95) cb ->                                      // Движение рейлгана начало
+                for railgun in Misaka_W.spell.circleGun
+                    let shadowGun = angleBetween(shadowAoe, railgun)
+                    let newPosition = getPosToward(shadowAoe, radius - 300, shadowGun)
+                    railgun.setPos(newPosition)
+                    moveToward(railgun, Misaka_W.spell.speed, shadowGun + 90)
+                    railgun.setFacing((shadowGun + 90).asAngleDegrees())                // Движение рейлгана конец
+            doPeriodicallyTimed(0.01, 9.95) cb ->
+                forUnitsInRange(shadowAoe.getPos(), radius) victim ->
+                    if victim.getTypeId() == Misaka_W.spell.railgunId
+                        if distanceBetween(victim, shadowAoe) >= radius - 200 and distanceBetween(victim, shadowAoe) <= radius - 99
+                            Misaka_W.spell.circleGun.addUnit(victim)
+                    if IsUnitEnemy(victim, casterOwner) and victim.isAlive() 
+                        dmgRand.addUnit(victim)
+                        caster.damageTarget(victim, damagePeriodic)
+                        if distanceBetween(victim, shadowAoe) >= radius - 200 and distanceBetween(victim, shadowAoe) <= radius - 99
+                            moveToward(victim, knockback, angleBetween(victim, shadowAoe))
+                        if distanceBetween(victim, shadowAoe) >= radius - 100 and distanceBetween(victim, shadowAoe) <= radius
+                            moveToward(victim, knockback, angleBetween(shadowAoe, victim))
+                for victim in dmgRand
+                    if distanceBetween(victim, shadowAoe) > radius or not victim.isAlive()
+                        dmgRand.removeUnit(victim)
+                    
+                caster.setAnimation(17)
+    doPeriodicallyTimed(0.025, times) cb ->
+        shadowAoe.setPos(caster.getPos())
+        if cb.isLast()
+            dmgRand.destr()
+            forUnitsInRange(shadowAoe.getPos(), radius) railgun ->
+                if railgun.getTypeId() == Misaka_W.spell.railgunId
+                    Misaka_W.spell.circleGun.removeUnit(railgun)
+            shadowAoe.kill()
+            shadowAoe.remove()
+            caster.setAnimation("stand")
+
+function spellCast(
+    unit caster
+)
+    let damagePeriodic = 0.05
+    let damage = 10.
+    let radius = 650.
+    let times = 10.
+    let microStun = 0.3
+    let knockback = 25.
+
+    spellMech(
+        caster, 
+        damagePeriodic, 
+        damage, 
+        radius, 
+        times, 
+        microStun, 
+        knockback
+    )
+
+init
+    let id = 'A005'
+    registerSpellEffectEvent(id) ->
+        spellCast(GetTriggerUnit())
